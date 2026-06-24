@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quach Pay — Международный платежный шлюз</title>
+    <style>
+        html, body {
+            background-color: #0b0c10;
+            margin: 0;
+            padding: 0;
+            border: none;
+            outline: none;
+            overflow-x: hidden;
+        }
+
+        .qp-wrapper {
+            background-color: #0b0c10;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 255, 163, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 0% 100%, rgba(212, 175, 55, 0.06) 0%, transparent 40%);
+            color: #fff;
+            padding: 25px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        .qp-wrapper * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent;
+            border: none;
+            outline: none;
+        }
+
+        *:focus { outline: none !important; border: none !important; }
+
+        /* ПРЕМИАЛЬНЫЙ ХЕДЕР */
+        .qp-header {
+            display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 460px;
+            background: #141722; padding: 18px 22px; border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255,255,255,0.05); margin-bottom: 20px;
+        }
+        .qp-header h1 { font-size: 20px; font-weight: 900; letter-spacing: 1.5px; color: #fff; }
+        .qp-header span { color: #00ffa3; text-shadow: 0 0 15px rgba(0, 255, 163, 0.5); }
+        
+        .qp-secure-badge {
+            display: flex; align-items: center; font-size: 11px; color: #94a3b8;
+            background: rgba(255, 255, 255, 0.03); padding: 6px 14px; border-radius: 8px; font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .qp-secure-dot {
+            width: 6px; height: 6px; background: #d4af37; border-radius: 50%; margin-right: 8px;
+            box-shadow: 0 0 8px #d4af37;
+        }
+
+        /* КОНТЕЙНЕР АГРЕГАТОРА */
+        .qp-container {
+            background: #11141e; padding: 25px 22px; border-radius: 24px; width: 100%; max-width: 460px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8); border: 1px solid rgba(255,255,255,0.02);
+            margin-bottom: 20px;
+        }
+        .qp-container h2 { font-size: 21px; font-weight: 800; margin-bottom: 6px; text-align: center; }
+        .qp-subtitle { color: #94a3b8; font-size: 13px; text-align: center; margin-bottom: 24px; }
+
+        /* ВЫБОР СПОСОБА ОПЛАТЫ (ТОЛЬКО СБП) */
+        .qp-method-label {
+            font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;
+        }
+        .qp-methods-grid {
+            display: grid; grid-template-columns: 1fr; margin-bottom: 22px;
+        }
+        .qp-method-card {
+            background: rgba(0, 255, 163, 0.04); border: 1px solid #00ffa3; border-radius: 12px;
+            padding: 14px; text-align: center; box-shadow: 0 0 15px rgba(0, 255, 163, 0.1);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .qp-method-card .qp-icon { font-size: 20px; }
+        .qp-method-card .qp-name { font-size: 13px; font-weight: 800; color: #00ffa3; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* ФОРМА */
+        .qp-form-group { margin-bottom: 20px; position: relative; }
+        .qp-label-flex {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 11px;
+            font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        
+        .qp-input-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
+        .qp-input-prefix { position: absolute; left: 16px; color: #475569; font-size: 15px; font-weight: bold; pointer-events: none; z-index: 2; }
+        
+        .qp-input {
+            width: 100%; padding: 15px 40px 15px 42px; background: #161924;
+            border-radius: 12px; color: #fff; font-size: 15px; font-weight: 600; position: relative; z-index: 1; 
+            transition: all 0.2s ease; border: 1px solid transparent;
+        }
+        .qp-input:focus { 
+            background: #1b1f2d; border-color: rgba(0, 255, 163, 0.3);
+            box-shadow: 0 0 15px rgba(0, 255, 163, 0.05);
+        }
+        
+        .qp-clear-btn { position: absolute; right: 14px; color: #475569; cursor: pointer; font-size: 15px; display: none; z-index: 5; padding: 5px; }
+
+        /* ДВУХКОЛОНОЧНЫЙ КАЛЬКУЛЯТОР */
+        .qp-calc-row { display: flex; gap: 12px; }
+        .qp-calc-row .qp-form-group { flex: 1; margin-bottom: 0; }
+        
+        /* КНОПКИ БЫСТРОГО ВЫБОРА */
+        .qp-presets { display: flex; gap: 8px; margin-top: 10px; }
+        .qp-preset-btn {
+            flex: 1; padding: 11px 0; background: #161924; border-radius: 10px;
+            color: #fff; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer;
+            transition: all 0.2s ease; border: 1px solid rgba(255,255,255,0.02);
+        }
+        .qp-preset-btn:hover { background: #00ffa3; color: #0b0c10; font-weight: 800; box-shadow: 0 5px 15px rgba(0, 255, 163, 0.3); }
+
+        /* ОШИБКИ */
+        .qp-error-msg { font-size: 12px; color: #ff4a4a; margin-top: 6px; display: none; font-weight: 500; }
+        
+        /* ИТОГИ */
+        .qp-result { background: #161924; padding: 20px; border-radius: 16px; margin-top: 22px; }
+        .qp-result-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13.5px; color: #64748b; font-weight: 500; }
+        .qp-result-row.qp-total {
+            margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, 0.05); font-size: 19px; color: #fff; font-weight: 900;
+        }
+        .qp-total span { color: #00ffa3; text-shadow: 0 0 15px rgba(0, 255, 163, 0.2); }
+        .qp-counter-anim { transition: all 0.1s ease; }
+        
+        /* ЧЕКБОКС */
+        .qp-agree-group { display: flex; align-items: flex-start; gap: 12px; margin-top: 22px; cursor: pointer; user-select: none; }
+        .qp-checkbox-custom {
+            width: 18px; height: 18px; background: #161924; border-radius: 6px; flex-shrink: 0; margin-top: 1px; position: relative; transition: all 0.2s;
+        }
+        .qp-agree-group input { display: none; }
+        .qp-agree-group input:checked + .qp-checkbox-custom { background: #00ffa3; }
+        .qp-agree-group input:checked + .qp-checkbox-custom::after {
+            content: "✓"; position: absolute; color: #0b0c10; font-size: 12px; font-weight: 900; left: 4.5px; top: 0px;
+        }
+        .qp-agree-text { font-size: 12.5px; color: #64748b; line-height: 1.5; font-weight: 500; }
+
+        /* КНОПКА ОТПРАВКИ */
+        .qp-submit-btn {
+            width: 100%; padding: 18px; background: #1c2130; border-radius: 12px; color: #475569;
+            font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 20px; text-transform: uppercase; text-align: center;
+            transition: all 0.3s ease; opacity: 0.6; pointer-events: none; letter-spacing: 0.5px;
+        }
+        .qp-submit-btn.active { 
+            background: linear-gradient(135deg, #00ffa3 0%, #00b8ff 100%); color: #05060a; 
+            opacity: 1; pointer-events: auto; font-weight: 900; box-shadow: 0 5px 25px rgba(0, 255, 163, 0.25);
+        }
+        .qp-submit-btn.active:active { transform: scale(0.99); }
+        
+        /* FAQ */
+        .qp-faq { width: 100%; max-width: 460px; background: #11141e; border-radius: 18px; padding: 16px; margin-bottom: 30px; }
+        .qp-faq-item { border-bottom: 1px solid rgba(255,255,255,0.02); padding: 14px 0; }
+        .qp-faq-item:last-child { border-bottom: none; }
+        .qp-faq-q { font-size: 13.5px; font-weight: 700; color: #e2e8f0; cursor: pointer; display: flex; justify-content: space-between; }
+        .qp-faq-a { font-size: 12.5px; color: #64748b; margin-top: 8px; display: none; line-height: 1.5; }
+
+        .qp-footer { color: #334155; font-size: 11px; font-weight: 600; margin-top: auto; padding-bottom: 25px; text-align: center; width: 100%; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body>
+
+<div class="qp-wrapper">
+    <header class="qp-header">
+        <h1>QUACH <span>PAY</span></h1>
+        <div class="qp-secure-badge">
+            <div class="qp-secure-dot"></div>
+            <span>3D-Secure Protected</span>
+        </div>
+    </header>
+
+    <div class="qp-container">
+        <h2>Пополнение Steam</h2>
+        <p class="qp-subtitle">Автоматический шлюз мгновенных переводов</p>
+        
+        <!-- ВЫБОР ПЛАТЕЖКИ (ТОЛЬКО СБП) -->
+        <div class="qp-method-label">Метод оплаты:</div>
+        <div class="qp-methods-grid">
+            <div class="qp-method-card">
+                <span class="qp-icon">📲</span>
+                <span class="qp-name">Система Быстрых Платежей (СБП)</span>
+            </div>
+        </div>
+
+        <!-- ЛОГИН STEAM -->
+        <div class="qp-form-group">
+            <div class="qp-label-flex">
+                <label>Логин аккаунта Steam:</label>
+            </div>
+            <div class="qp-input-wrapper">
+                <span class="qp-input-prefix">👤</span>
+                <input type="text" id="qp_steamLogin" class="qp-input" placeholder="Введите ваш логин ввода" oninput="window.qp_checkLogin()">
+                <span class="qp-clear-btn" id="qp_clearLogin" onclick="window.qp_clearLoginField()">✕</span>
+            </div>
+            <div class="qp-error-msg" id="qp_loginError">Неверный формат логина</div>
+        </div>
+
+        <!-- КАЛЬКУЛЯТОР -->
+        <div class="qp-calc-row">
+            <div class="qp-form-group">
+                <div class="qp-label-flex"><label>Сумма (РУБ):</label></div>
+                <div class="qp-input-wrapper">
+                    <span class="qp-input-prefix">📉</span>
+                    <input type="number" id="qp_amount" class="qp-input" placeholder="В Steam" inputmode="numeric" oninput="window.qp_calcFromSteam()">
+                </div>
+            </div>
+            <div class="qp-form-group">
+                <div class="qp-label-flex"><label>К оплате (РУБ):</label></div>
+                <div class="qp-input-wrapper">
+                    <span class="qp-input-prefix">📲</span>
+                    <input type="number" id="qp_payAmount" class="qp-input" placeholder="Итого" inputmode="numeric" oninput="window.qp_calcFromPay()">
+                </div>
+            </div>
+        </div>
+        
+        <div class="qp-presets">
+            <div class="qp-preset-btn" onclick="window.qp_setPreset(150)">150 ₽</div>
+            <div class="qp-preset-btn" onclick="window.qp_setPreset(500)">500 ₽</div>
+            <div class="qp-preset-btn" onclick="window.qp_setPreset(1000)">1000 ₽</div>
+            <div class="qp-preset-btn" onclick="window.qp_setPreset(2500)">2500 ₽</div>
+        </div>
+        <div class="qp-error-msg" id="qp_amountError">Минимум 100 рублей</div>
+
+        <!-- ИТОГИ -->
+        <div class="qp-result">
+            <div class="qp-result-row">
+                <span>Провайдер авторизации:</span>
+                <span style="color: #fff; font-weight: 600;">Steam Global</span>
+            </div>
+            <div class="qp-result-row">
+                <span>Зачисление на баланс:</span>
+                <span id="qp_steamDisplay" style="color: #fff; font-weight: 600;">0 руб.</span>
+            </div>
+            <div class="qp-result-row qp-total">
+                <span>Итоговый расчет:</span>
+                <span><span id="qp_totalPrice" class="qp-counter-anim">0</span> руб.</span>
+            </div>
+        </div>
+
+        <!-- ГАЛОЧКА СОГЛАСИЯ -->
+        <label class="qp-agree-group">
+            <input type="checkbox" id="qp_agreeCheck" onchange="window.qp_validateFormState()">
+            <div class="qp-checkbox-custom"></div>
+            <span class="qp-agree-text">Подтверждаю правильность ввода данных и принимаю пользовательское соглашение Quach Pay</span>
+        </label>
+
+        <div class="qp-submit-btn" id="qp_submitBtn" onclick="window.qp_submitForm()">Создать инвойс</div>
+    </div>
+
+    <div class="qp-faq">
+        <div class="qp-faq-item">
+            <div class="qp-faq-q" onclick="window.qp_toggleFaq(this)">Каковы сроки зачисления средств? <span>▼</span></div>
+            <div class="qp-faq-a">Обычно средства поступают на баланс в течение 1-3 минут после подтверждения транзакции оператором.</div>
+        </div>
+    </div>
+
+    <footer class="qp-footer">
+        &copy; 2026 Quach Pay Processing. Все права защищены.
+    </footer>
+</div>
+
+<script>
+    (function() {
+        const TELEGRAM_TARGET = "Quac23h"; 
+        const TOTAL_RATE = 1.14; 
+        const selectedMethod = "СБП";
+
+        function animateValue(elementId, start, end, duration) {
+            const obj = document.getElementById(elementId);
+            if (!obj) return;
+            if (start === end) {
+                obj.textContent = end;
+                return;
+            }
+            const range = end - start;
+            let current = start;
+            const increment = end > start ? Math.ceil(range / 8) : Math.floor(range / 8);
+            const stepTime = Math.abs(Math.floor(duration / 8));
+            
+            const timer = setInterval(function() {
+                current += increment;
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    clearInterval(timer);
+                    obj.textContent = end;
+                } else {
+                    obj.textContent = current;
+                }
+            }, stepTime);
+        }
+
+        window.qp_calcFromSteam = function() {
+            const amountInput = document.getElementById('qp_amount');
+            const payInput = document.getElementById('qp_payAmount');
+            const amountError = document.getElementById('qp_amountError');
+            const totalPriceSpan = document.getElementById('qp_totalPrice');
+            const steamDisplay = document.getElementById('qp_steamDisplay');
+
+            const steamAmount = parseFloat(amountInput.value) || 0;
+            const oldPrice = parseInt(totalPriceSpan.textContent) || 0;
+            
+            if (steamAmount >= 100) {
+                amountError.style.display = 'none';
+                const finalPrice = Math.ceil(steamAmount * TOTAL_RATE);
+                
+                payInput.value = finalPrice;
+                animateValue('qp_totalPrice', oldPrice, finalPrice, 120);
+                steamDisplay.textContent = steamAmount + ' руб.';
+            } else {
+                payInput.value = '';
+                totalPriceSpan.textContent = '0';
+                steamDisplay.textContent = '0 руб.';
+                amountError.style.display = amountInput.value !== '' ? 'block' : 'none';
+            }
+            window.qp_validateFormState();
+        };
+
+        window.qp_calcFromPay = function() {
+            const amountInput = document.getElementById('qp_amount');
+            const payInput = document.getElementById('qp_payAmount');
+            const amountError = document.getElementById('qp_amountError');
+            const totalPriceSpan = document.getElementById('qp_totalPrice');
+            const steamDisplay = document.getElementById('qp_steamDisplay');
+
+            const payAmount = parseFloat(payInput.value) || 0;
+            const estimatedSteam = Math.floor(payAmount / TOTAL_RATE);
+            const oldPrice = parseInt(totalPriceSpan.textContent) || 0;
+            
+            if (estimatedSteam >= 100) {
+                amountError.style.display = 'none';
+                amountInput.value = estimatedSteam;
+                animateValue('qp_totalPrice', oldPrice, payAmount, 120);
+                steamDisplay.textContent = estimatedSteam + ' руб.';
+            } else {
+                amountInput.value = '';
+                totalPriceSpan.textContent = '0';
+                steamDisplay.textContent = '0 руб.';
+                amountError.style.display = payInput.value !== '' ? 'block' : 'none';
+            }
+            window.qp_validateFormState();
+        };
+
+        window.qp_setPreset = function(val) {
+            document.getElementById('qp_amount').value = val;
+            window.qp_calcFromSteam();
+        };
+
+        window.qp_checkLogin = function() {
+            const loginInput = document.getElementById('qp_steamLogin');
+            document.getElementById('qp_clearLogin').style.display = loginInput.value.length > 0 ? 'block' : 'none';
+            window.qp_validateFormState();
+        };
+
+        window.qp_clearLoginField = function() {
+            document.getElementById('qp_steamLogin').value = '';
+            document.getElementById('qp_clearLogin').style.display = 'none';
+            window.qp_validateFormState();
+        };
+
+        window.qp_validateFormState = function() {
+            const isChecked = document.getElementById('qp_agreeCheck').checked;
+            const login = document.getElementById('qp_steamLogin').value.trim();
+            const amount = parseFloat(document.getElementById('qp_amount').value) || 0;
+            const submitBtn = document.getElementById('qp_submitBtn');
+            
+            if (isChecked && login && amount >= 100) {
+                submitBtn.classList.add('active');
+            } else {
+                submitBtn.classList.remove('active');
+            }
+        };
+
+        window.qp_toggleFaq = function(element) {
+            const answer = element.nextElementSibling;
+            const arrow = element.querySelector('span');
+            answer.style.display = answer.style.display === 'block' ? 'none' : 'block';
+            arrow.textContent = answer.style.display === 'block' ? '▲' : '▼';
+        };
+
+        window.qp_submitForm = function() {
+            const isChecked = document.getElementById('qp_agreeCheck').checked;
+            if (!isChecked) return;
+
+            const login = document.getElementById('qp_steamLogin').value.trim();
+            const amount = document.getElementById('qp_amount').value;
+            const total = document.getElementById('qp_totalPrice').textContent;
+
+            if (!login || amount < 100) return;
+
+            const messageText = `Система: Quach Pay\nЗаявка на инвойс\nМетод: ${selectedMethod}\nЛогин Steam: ${login}\nСумма к зачислению: ${amount} руб.\nИтого к оплате: ${total} руб.`;
+
+            window.location.href = `https://telegram.me/${TELEGRAM_TARGET}?text=${encodeURIComponent(messageText)}`;
+        };
+    })();
+</script>
+</body>
+</html>
